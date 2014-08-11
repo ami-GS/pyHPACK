@@ -8,46 +8,61 @@ def parseIntRepresentation(buf, N):
     else:
         cursor = 1
         M = 0
-        while buf[cursor] & 0x80 == 0x80:
+        while buf[cursor] & 0x80:
             I += (buf[cursor] & 0x7f) * (1 << M)
             M += 7
             cursor += 1
         I += (buf[cursor] & 0x7f) * (1 << M)
         return I, cursor
 
+def extractContent(subBuf, length):
+    content = ""
+    for i in range(length):
+        content += chr(subBuf[i])
+    return content
 
-def encode(data):
+def decode(data):
     buf = [int(data[i:i+2], 16) for i in range(0, len(data), 2)]
     cursor = 0
     headers = []
     while cursor < len(buf):
         index = 0
         name = value = ""
-        if buf[cursor] & 0x80:
+        if buf[cursor] & 0xe0 == 0x20:
+            # 7.3 Header Table Size Update
+            #setMaxHeaderTableSize(buf[cursor] & 0x1f)
+            cursor += 1
+        elif buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             index, c = parseIntRepresentation(buf[cursor:], 7)
             cursor += c
         else :
-            if buf[cursor] & 0x40:
+            isIncremental = False
+            if buf[cursor] & 0xc0 == 0x40:
                 # 7.2.1 Literal Header Field with Incremental Indexing
                 index, c = parseIntRepresentation(buf[cursor:], 6)
                 cursor += c
-            else if buf[cursor] & 0x10:
+                isIncremental = True
+            elif buf[cursor] & 0xf0 == 0xf0:
                 # 7.2.3 Literal Header Field never Indexed
                 index, c = parseIntRepresentation(buf[cursor:], 4)
                 cursor += c
-            else if buf[cursor] & 0x20:
-                # 7.3 Header Table Size Update
-                setMaxHeaderTableSize(buf[cursor] & 0x1f)
-                cursor += 1        
             else:
                 # 7.2.2 Literal Header Field without Indexing
                 index, c = parseIntRepresentation(buf[cursor:], 4)
                 cursor += c
-            
             if not index:
-                length, c = parseIntRepresentation(buf[cursor:], 7)
+                name_length, c = parseIntRepresentation(buf[cursor:], 7)
                 cursor += c
+                name = extractContent(buf[cursor:], name_length)
+                cursor += name_length
+            
+            value_length, c = parseIntRepresentation(buf[cursor:], 7)
+            cursor += c
+            value = extractContent(buf[cursor:], value_length)
+            cursor += value_length
+        headers.append({name:value})
+
     return headers
 
     
