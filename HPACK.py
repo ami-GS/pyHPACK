@@ -12,7 +12,7 @@ def parseIntRepresentation(buf, N):
             I += (buf[cursor] & 0x7f) * (1 << M)
             M += 7
             cursor += 1
-        I += (buf[cursor] & 0x7f) * (1 << M)
+        I += buf[cursor] * (1 << M)    
         return I, cursor
 
 def extractContent(subBuf, length):
@@ -61,6 +61,7 @@ def decode(data):
             cursor += c
             value = extractContent(buf[cursor:], value_length)
             cursor += value_length
+
         headers.append({name:value})
 
     return headers
