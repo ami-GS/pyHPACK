@@ -26,9 +26,12 @@ if __name__ == "__main__":
                         headers = decode(data['cases'][seqno]['wire'])
                     except Exception as e:
                         print(e)
-                    if headers != data['cases'][seqno]['headers']:
-                        print('Missed the in %s seqno %d' % (case, seqno))
-                        break
+                    for header in data['cases'][seqno]['headers']:
+                        if header not in headers:
+                            print header
+                            print headers[header.keys()[0]]
+                            print('Missed the in %s seqno %d' % (case, seqno))
+                            break
                     if seqno == len(data['cases'])-1:
                         allPass = True
             if allPass:
