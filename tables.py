@@ -62,6 +62,7 @@ STATIC_TABLE = [
     ["via", ""],
     ["www-authenticate", ""],
 ]
+STATIC_TABLE_NUM = len(STATIC_TABLE)
 
 HUFFMAN_TABLE= [
   [0x1ff8, 13],
@@ -361,6 +362,7 @@ class HuffmanTree():
         return result
         
     def checkTreeContent(self, data, length):
+        #for debug
         cursor = self
         for i in range(length)[::-1]:
             if data & (1 << i):
@@ -377,8 +379,11 @@ class HeaderTable():
         self.currentTableSize = 0
         self.currentEntryNum = 0
 
+    def setMaxHeaderTableSize(size):
+        self.settingsHeaderTableSize = size
+
     def get(self, index):
-        return self.table[index - 62]
+        return self.table[index - STATIC_TABLE_NUM]
 
     def add(self, name, value):
         while self.currentTableSize + len(name+value) > self.settingsHeaderTableSize:

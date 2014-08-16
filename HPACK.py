@@ -1,8 +1,6 @@
-import struct
-import json
-from tables import HuffmanTree, STATIC_TABLE, HeaderTable
+from tables import HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
 HEADER_TABLE = HeaderTable()
-root = HuffmanTree.create()
+huffmanRoot = HuffmanTree.create()
 
 def parseIntRepresentation(buf, N):
     I = (buf[0] & ((1 << N) - 1))
@@ -20,32 +18,40 @@ def parseIntRepresentation(buf, N):
 
 def extractContent(subBuf, length, isHuffman):
     if isHuffman:
-        content = root.decode(subBuf, length) 
+        content = huffmanRoot.decode(subBuf, length) 
     else:
         content = ""
         for i in range(length):
             content += chr(subBuf[i])
     return content
 
-def parseHeader(index, subBuf):
+def parseHeader(index, subBuf, isIndexed):
+    def parseFromByte(buf):
+        isHuffman = buf[0] & 0x80
+        length, cursor = parseIntRepresentation(buf, 7)
+        content = extractContent(buf[cursor:], length, isHuffman)
+        cursor += length
+        return content, cursor
+
     cursor = 0
     name = value = ""
-    header = None
-    if 0 < index < 62:
+    if not isIndexed:
+        if not index:
+            name, c = parseFromByte(subBuf[cursor:])
+            cursor += c
+        value, c = parseFromByte(subBuf[cursor:])
+        cursor += c
+
+    if 0 < index < STATIC_TABLE_NUM:
         header = STATIC_TABLE[index]
         name = header[0]
-        value = header[1]
-    elif not index:
-        name_length, c = parseIntRepresentation(subBuf[cursor:], 7)
-        cursor += c
-        name = extractContent(subBuf[cursor:], name_length)
-        cursor += name_length        
-
-    if not value:
-        value_length, c = parseIntRepresentation(subBuf[cursor:], 7)
-        cursor += c
-        value = extractContent(subBuf[cursor:], value_length)
-        cursor += value_length
+        value = value or header[1]
+    elif STATIC_TABLE_NUM <= index <= STATIC_TABLE_NUM + HEADER_TABLE.currentEntryNum:
+        header = HEADER_TABLE.get(index)
+        name = header[0]
+        value = value or header[1]
+    else:
+        pass #error
         
     return name, value, cursor
 
@@ -57,11 +63,10 @@ def decode(data):
     while cursor < len(buf):
         isIndexed = False
         isIncremental = False
-        name = value = ""
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
-            #setMaxHeaderTableSize(buf[cursor] & 0x1f)
-            cursor += 1
+           HEADER_TABLE.setMaxHeaderTableSize(buf[cursor] & 0x1f)
+           cursor += 1
         elif buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
@@ -82,31 +87,8 @@ def decode(data):
                 index, c = parseIntRepresentation(buf[cursor:], 4)
             cursor += c
 
-        #name, value, c = parseHeader(index, buf[cursor:], isIndexed)
-        #cursor += c
-            if not index:
-                isHuffman = buf[cursor] & 0x80
-                name_length, c = parseIntRepresentation(buf[cursor:], 7)
-                cursor += c
-                name = extractContent(buf[cursor:], name_length, isHuffman)
-                cursor += name_length
-
-            isHuffman = buf[cursor] & 0x80
-            value_length, c = parseIntRepresentation(buf[cursor:], 7)
-            cursor += c
-            value = extractContent(buf[cursor:], value_length, isHuffman)
-            cursor += value_length
-
-        if 0 < index < 62:
-            header = STATIC_TABLE[index]
-            name = header[0]
-            value = value or header[1]
-        elif 62 <= index <  63 + HEADER_TABLE.currentEntryNum:
-            header = HEADER_TABLE.get(index)
-            name = header[0]
-            value = value or header[1]
-        else:
-            pass #error
+        name, value, c = parseHeader(index, buf[cursor:], isIndexed)
+        cursor += c
 
         if isIncremental:
             HEADER_TABLE.add(name, value)
@@ -114,10 +96,7 @@ def decode(data):
 
     return headers
 
-    
-
 if __name__ == "__main__":
-    testCase = []
     data = "1FA18DB701" #3000000
     data = "00073a6d6574686f640347455400073a736368656d650468747470000a3a617574686f726974790f7777772e7961686f6f2e636f2e6a7000053a70617468012f"
     print(decode(data))
