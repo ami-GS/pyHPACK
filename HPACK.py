@@ -2,6 +2,18 @@ from tables import HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
 HEADER_TABLE = HeaderTable()
 huffmanRoot = HuffmanTree.create()
 
+def packIntRepresentation(I, N):
+    if I < (1 << N) - 1:
+        return [I]
+    else:
+        buf = [(1 << N) - 1]
+        I -= (1 << N) - 1
+        while I >= 0x80:
+            buf.append(I & 0x7f | 0x80)
+            I = (I >> 7)
+        buf.append(I)
+        return buf
+
 def parseIntRepresentation(buf, N):
     I = (buf[0] & ((1 << N) - 1))
     cursor = 1
@@ -99,4 +111,7 @@ def decode(data):
 if __name__ == "__main__":
     data = "1FA18DB701" #3000000
     data = "00073a6d6574686f640347455400073a736368656d650468747470000a3a617574686f726974790f7777772e7961686f6f2e636f2e6a7000053a70617468012f"
-    print(decode(data))
+    #print(decode(data))
+    for i in packIntRepresentation(3000000, 5):
+        print hex(i)
+    #print parseIntRepresentation("".join([str(hex(b))[2:] for b in buf]), 5)
