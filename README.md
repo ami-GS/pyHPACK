@@ -3,8 +3,8 @@ pyHPACK
 
 Python implementation of HPACK (draft 09)
 
-### encode
+### decode
 Passes all test case (hpack-test-case)
 
-### decode
+### encode
 Not implemented yet
