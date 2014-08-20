@@ -15,7 +15,6 @@ TESTCASE = [
 def encodeTest():
     for i in range(len(TESTCASE)):
         cases = [TESTCASE[i] + name for name in os.listdir(TESTCASE[i])]
-        break
         for case in cases:
             allPass = False
             miss = False
@@ -27,7 +26,7 @@ def encodeTest():
                     except Exception as e:
                         print(e)
                     code = encode(headers, False, False, False)
-                    if code != data["cases"][seqno][wire]:
+                    if code != data["cases"][seqno]["wire"]:
                         print("Missed in %s seqno %d" % (case, seqno))
                         miss = True
                         break
