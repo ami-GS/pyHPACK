@@ -14,6 +14,34 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
+def encode(headers, fromStaticTable, fromHeaderTable, huffman):
+    wire = ""
+    nameTable = [header[0] for header in STATIC_TABLE]
+
+    for header in headers:
+        if fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
+            if fromHeaderTable:
+                pass
+        else:
+            #representation
+            
+            intRep = packIntRepresentation(len(header[0]), 7)
+            if huffman:
+                intRep[0] = intRep[0] | 0x80
+            wire = wire + "".join([hex(b)[2:] for b in intRep])
+            for char in header[0]:
+                wire = wire + hex(ord(char))[2:]
+                
+            intRep = packIntRepresentation(len(header[1]), 7)
+            if huffman:
+                intRep[0] = intRep[0] | 0x80
+            wire = wire + "".join([hex(b)[2:] for b in intRep])
+            for char in header[0]:
+                wire = wire + hex(ord(char))[2:]
+
+    return wire
+
+
 def parseIntRepresentation(buf, N):
     I = (buf[0] & ((1 << N) - 1))
     cursor = 1
