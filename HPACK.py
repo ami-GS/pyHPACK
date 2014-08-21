@@ -19,25 +19,41 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
     nameTable = [header[0] for header in STATIC_TABLE]
 
     for header in headers:
-        if fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
-            if fromHeaderTable:
+
+        # 7.1 Indexed Header Field Representation
+        if fromStaticTable and header in STATIC_TABLE:
+            # or header in HEADER_TALBE
+            wire = wire + hex(STATIC_TABLE.index(header) | 0x80)[2:]
+        
+        # 7.2.1 Literal Header Field with Incremental Indexing
+        elif fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
+            if fromHeaderTalbe:
+                wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x40)[2:]
+            else:
                 pass
-        else:
-            #representation
-            
-            intRep = packIntRepresentation(len(header[0]), 7)
-            if huffman:
-                intRep[0] = intRep[0] | 0x80
-            wire = wire + "".join([hex(b)[2:] for b in intRep])
-            for char in header[0]:
-                wire = wire + hex(ord(char))[2:]
-                
+                #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header))[2:]
+                #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x10)[2:]
             intRep = packIntRepresentation(len(header[1]), 7)
             if huffman:
                 intRep[0] = intRep[0] | 0x80
-            wire = wire + "".join([hex(b)[2:] for b in intRep])
+            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
             for char in header[0]:
-                wire = wire + hex(ord(char))[2:]
+                wire = wire + hex(ord(char))[2:].zfill(2)
+        else:
+            wire = wire + "00"# "10" "40"
+            intRep = packIntRepresentation(len(header[0]), 7)
+            if huffman:
+                intRep[0] = intRep[0] | 0x80
+            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
+            for char in header[0]:
+                wire = wire + hex(ord(char))[2:].zfill(2)
+
+            intRep = packIntRepresentation(len(header[1]), 7)
+            if huffman:
+                intRep[0] = intRep[0] | 0x80
+            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
+            for char in header[1]:
+                wire = wire + hex(ord(char))[2:].zfill(2)       
 
     return wire
 
