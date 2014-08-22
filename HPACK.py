@@ -14,6 +14,18 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
+def packContent(content, huffman):
+    wire = ""
+    intRep = packIntRepresentation(len(content), 7)
+    if huffman:
+        intRep[0] = intRep[0] | 0x80
+    #pack integer representation
+    wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep]) 
+    #pack content (header name or value)
+    wire = wire + "".join([hex(ord(char))[2:].zfill(2) for char in content])
+
+    return wire
+
 def encode(headers, fromStaticTable, fromHeaderTable, huffman):
     wire = ""
     nameTable = [header[0] for header in STATIC_TABLE]
@@ -33,27 +45,12 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
                 pass
                 #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header))[2:]
                 #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x10)[2:]
-            intRep = packIntRepresentation(len(header[1]), 7)
-            if huffman:
-                intRep[0] = intRep[0] | 0x80
-            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
-            for char in header[0]:
-                wire = wire + hex(ord(char))[2:].zfill(2)
+            wire = wire + packContent(header[1], huffman)
+
         else:
             wire = wire + "00"# "10" "40"
-            intRep = packIntRepresentation(len(header[0]), 7)
-            if huffman:
-                intRep[0] = intRep[0] | 0x80
-            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
-            for char in header[0]:
-                wire = wire + hex(ord(char))[2:].zfill(2)
-
-            intRep = packIntRepresentation(len(header[1]), 7)
-            if huffman:
-                intRep[0] = intRep[0] | 0x80
-            wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep])
-            for char in header[1]:
-                wire = wire + hex(ord(char))[2:].zfill(2)       
+            wire = wire + packContent(header[0], huffman)
+            wire = wire + packContent(header[1], huffman)
 
     return wire
 
