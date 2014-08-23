@@ -1,7 +1,9 @@
 from tables import HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
 HEADER_TABLE = HeaderTable()
 huffmanRoot = HuffmanTree.create()
-
+nameTable = [header[0] for header in STATIC_TABLE]
+    
+# 6.1 Integer Representation (encode)
 def packIntRepresentation(I, N):
     if I < (1 << N) - 1:
         return [I]
@@ -20,41 +22,36 @@ def packContent(content, huffman):
     if huffman:
         intRep[0] = intRep[0] | 0x80
     #pack integer representation
-    wire = wire + "".join([hex(b)[2:].zfill(2) for b in intRep]) 
+    wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
     #pack content (header name or value)
-    wire = wire + "".join([hex(ord(char))[2:].zfill(2) for char in content])
+    wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
 
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman):
     wire = ""
-    nameTable = [header[0] for header in STATIC_TABLE]
 
     for header in headers:
 
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and header in STATIC_TABLE:
             # or header in HEADER_TALBE
-            wire = wire + hex(STATIC_TABLE.index(header) | 0x80)[2:]
-        
+            wire += hex(STATIC_TABLE.index(header) | 0x80)[2:]
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
             if fromHeaderTalbe:
-                wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x40)[2:]
+                wire += hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x40)[2:]
             else:
                 pass
                 #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header))[2:]
                 #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x10)[2:]
-            wire = wire + packContent(header[1], huffman)
-
+            wire += packContent(header[1], huffman)
         else:
-            wire = wire + "00"# "10" "40"
-            wire = wire + packContent(header[0], huffman)
-            wire = wire + packContent(header[1], huffman)
+            wire += "00" + packContent(header[0], huffman) + packContent(header[1], huffman)
 
     return wire
 
-
+# 6.1 Integer Representation (decode)
 def parseIntRepresentation(buf, N):
     I = (buf[0] & ((1 << N) - 1))
     cursor = 1
@@ -71,12 +68,9 @@ def parseIntRepresentation(buf, N):
 
 def extractContent(subBuf, length, isHuffman):
     if isHuffman:
-        content = huffmanRoot.decode(subBuf, length) 
+        return huffmanRoot.decode(subBuf, length) 
     else:
-        content = ""
-        for i in range(length):
-            content += chr(subBuf[i])
-    return content
+        return "".join([chr(subBuf[i]) for i in range(length)])
 
 def parseHeader(index, subBuf, isIndexed):
     def parseFromByte(buf):
