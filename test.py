@@ -42,8 +42,7 @@ def decodeTest():
     for i in range(len(TESTCASE)):
         cases = [TESTCASE[i] + name for name in os.listdir(TESTCASE[i])]
         for case in cases:
-            allPass = False
-            miss = False
+            allPass = True
             with open(case) as f:
                 data = json.loads(f.read())
                 for seqno in range(len(data['cases'])):
@@ -51,15 +50,10 @@ def decodeTest():
                         headers = decode(data['cases'][seqno]['wire'])
                     except Exception as e:
                         print(e)
-                    for i, header in enumerate(headers):
-                        if header not in data['cases'][seqno]['headers']:
-                            miss = True
-                            print i, header
-                            print('Missed in %s seqno %d' % (case, seqno))
-                    if miss:
+                    if headers != data['cases'][seqno]['headers']:
+                        allPass = False
+                        print('Missed in %s seqno %d' % (case, seqno))
                         break
-                    if seqno == len(data['cases'])-1:
-                        allPass = True
             if allPass:
                 print('Passed the %s' % case)
 
@@ -70,3 +64,5 @@ if __name__ == "__main__":
         encodeTest()
     elif len(args) == 1 or (len(args) == 2 and args[1] == "-d"):
         decodeTest()
+
+
