@@ -1,4 +1,4 @@
-from tables import HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
+from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
 HEADER_TABLE = HeaderTable()
 huffmanRoot = HuffmanTree.create()
 nameTable = [header[0] for header in STATIC_TABLE]
@@ -18,14 +18,18 @@ def packIntRepresentation(I, N):
 
 def packContent(content, huffman):
     wire = ""
-    intRep = packIntRepresentation(len(content), 7)
     if huffman:
+        hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
+        hContent += "1" * (8 - (len(hContent) % 8))
+        intRep = packIntRepresentation(len(hContent)/4, 7)
         intRep[0] = intRep[0] | 0x80
-    #pack integer representation
-    wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
-    #pack content (header name or value)
-    wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
-
+        wire += hex(int(hContent, 2))[2:-1]
+    else:
+        #pack integer representation
+        intRep = packIntRepresentation(len(content), 7)
+        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
+        wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
+        #TODO hwew should be fixed
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman):
@@ -39,12 +43,12 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
             wire += hex(STATIC_TABLE.index(header) | 0x80)[2:]
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
-            if fromHeaderTalbe:
-                wire += hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x40)[2:]
+            if fromHeaderTable:
+                wire += hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x40)[2:]
             else:
-                pass
+
                 #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header))[2:]
-                #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header) | 0x10)[2:]
+                wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x00)[2:]
             wire += packContent(header[1], huffman)
         else:
             wire += "00" + packContent(header[0], huffman) + packContent(header[1], huffman)
