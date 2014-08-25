@@ -6,10 +6,10 @@ from HPACK import decode, encode
 TESTCASE = [
     'hpack-test-case/haskell-http2-naive/',
     'hpack-test-case/haskell-http2-naive-huffman/',
-    'hpack-test-case/haskell-http2-static/',
-    'hpack-test-case/haskell-http2-static-huffman/',
-    'hpack-test-case/haskell-http2-linear/',
-    'hpack-test-case/haskell-http2-linear-huffman/',
+    #'hpack-test-case/haskell-http2-static/',
+    #'hpack-test-case/haskell-http2-static-huffman/',
+    #'hpack-test-case/haskell-http2-linear/',
+    #'hpack-test-case/haskell-http2-linear-huffman/',
 ]
 
 def encodeTest():
@@ -25,11 +25,13 @@ def encodeTest():
                         headers = [[h.keys()[0], h.values()[0]]for h in data["cases"][seqno]["headers"]]
                     except Exception as e:
                         print(e)
-                    code = encode(headers, False, False, False)
+                    code = encode(headers, 'static' in case or 'linear' in case, 'linear' in case, 'huffman' in case)
                     if code != data["cases"][seqno]["wire"]:
+                        print 'encoder:', code
+                        print 'answer:', data["cases"][seqno]["wire"]
                         print("Missed in %s seqno %d" % (case, seqno))
                         miss = True
-                        break
+                        #break
                 if miss:
                     break
                 if seqno == len(data["cases"]) - 1:
