@@ -16,14 +16,18 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
+#TODO here should use shift operator
 def packContent(content, huffman):
     wire = ""
     if huffman:
+
         hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
+        #fill = 1 if len(hContent) % 8 > 0 else 0
+        print (8 - (len(hContent) % 8))
         hContent += "1" * (8 - (len(hContent) % 8))
-        intRep = packIntRepresentation(len(hContent)/4, 7)
+        intRep = packIntRepresentation(len(hContent)/8, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += hex(int(hContent, 2))[2:-1]
+        wire += "".join([hex(c)[2:] for c in intRep]) + hex(int(hContent, 2))[2:-1]
     else:
         #pack integer representation
         intRep = packIntRepresentation(len(content), 7)
