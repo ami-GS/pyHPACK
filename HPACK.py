@@ -20,17 +20,17 @@ def packIntRepresentation(I, N):
 def packContent(content, huffman):
     wire = ""
     if huffman:
-
+        #longer value cause error
         hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
-        #fill = 1 if len(hContent) % 8 > 0 else 0
-        print (8 - (len(hContent) % 8))
-        hContent += "1" * (8 - (len(hContent) % 8))
+        hContent += "1" * ((8 - (len(hContent) % 8)) % 8)
         intRep = packIntRepresentation(len(hContent)/8, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(c)[2:] for c in intRep]) + hex(int(hContent, 2))[2:-1]
+        wire += "".join([hex(c)[2:] for c in intRep]) + hex(int(hContent, 2))[2:].rsplit("L")[0]
     else:
-        #pack integer representation
         intRep = packIntRepresentation(len(content), 7)
+        #wire = (wire << len(intRep)*8)
+        #for i in range(len(intRep)):
+        #    wire = wire | (intRep[i] << (8*(len(intRep)-i-1)))))
         wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
         wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
         #TODO hwew should be fixed
