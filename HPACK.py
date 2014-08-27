@@ -25,7 +25,7 @@ def packContent(content, huffman):
         hContent += "1" * ((8 - (len(hContent) % 8)) % 8)
         intRep = packIntRepresentation(len(hContent)/8, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(c)[2:] for c in intRep]) + hex(int(hContent, 2))[2:].rsplit("L")[0]
+        wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + hex(int(hContent, 2))[2:].rsplit("L")[0]
     else:
         intRep = packIntRepresentation(len(content), 7)
         #wire = (wire << len(intRep)*8)
