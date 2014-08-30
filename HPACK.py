@@ -20,7 +20,6 @@ def packIntRepresentation(I, N):
 def packContent(content, huffman):
     wire = ""
     if huffman:
-        #longer value cause error
         hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
         hContent += "1" * ((8 - (len(hContent) % 8)) % 8)
         intRep = packIntRepresentation(len(hContent)/8, 7)
@@ -28,12 +27,8 @@ def packContent(content, huffman):
         wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + hex(int(hContent, 2))[2:].rsplit("L")[0]
     else:
         intRep = packIntRepresentation(len(content), 7)
-        #wire = (wire << len(intRep)*8)
-        #for i in range(len(intRep)):
-        #    wire = wire | (intRep[i] << (8*(len(intRep)-i-1)))))
         wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
         wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
-        #TODO hwew should be fixed
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman):
@@ -44,15 +39,19 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and header in STATIC_TABLE:
             # or header in HEADER_TALBE
-            wire += hex(STATIC_TABLE.index(header) | 0x80)[2:]
+            tmp = hex(STATIC_TABLE.index(header) | 0x00)[2:]
+            tmp = '0' + tmp if len(tmp) % 2 else tmp
+            wire += tmp
+            if not fromHeaderTable:
+                wire += packContent(header[1], huffman)                
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
             if fromHeaderTable:
                 wire += hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x40)[2:]
             else:
-
-                #wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header))[2:]
-                wire = wire + hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x00)[2:]
+                tmp = hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x00)[2:]
+                tmp = '0' + tmp if len(tmp) % 2 else tmp
+                wire += tmp
             wire += packContent(header[1], huffman)
         else:
             wire += "00" + packContent(header[0], huffman) + packContent(header[1], huffman)
