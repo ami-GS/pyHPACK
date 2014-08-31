@@ -63,6 +63,7 @@ STATIC_TABLE = [
     ["www-authenticate", ""],
 ]
 STATIC_TABLE_NUM = len(STATIC_TABLE)
+NAME_TABLE = [header[0] for header in STATIC_TABLE]
 
 HUFFMAN_TABLE= [
   [0x1ff8, 13],
@@ -372,10 +373,11 @@ class HuffmanTree():
         print cursor.code
 
 
-class HeaderTable():
+class HeaderTable(object):
     def __init__(self):
         self.settingsHeaderTableSize = 4096
         self.table = []
+        self.nameTable = []
         self.currentTableSize = 0
         self.currentEntryNum = 0
 
@@ -385,11 +387,35 @@ class HeaderTable():
     def get(self, index):
         return self.table[index - STATIC_TABLE_NUM]
 
-    def add(self, name, value):
-        while self.currentTableSize + len(name+value) > self.settingsHeaderTableSize:
-            header = self.table.pop()
-            self.currentTableSize -= len(header[0] + header[1])
+    def add(self, header):
+        while self.currentTableSize + len("".join(header)) > self.settingsHeaderTableSize:
+            trash = self.table.pop()
+            self.nameTable.pop()
+            self.currentTableSize -= len("".join(trash))
             self.currentEntryNum -= 1
-        self.table.insert(0, [name, value])        
-        self.currentTableSize += len(name+value)
+        self.table.insert(0, header)
+        self.nameTable.insert(0, header[0])
+        self.currentTableSize += len("".join(header))
         self.currentEntryNum += 1
+
+class Table(HeaderTable):
+    def __init__(self):
+        super(Table, self).__init__()
+
+    def find(self, name, value):
+        if [name, value] in STATIC_TABLE:
+            return True, STATIC_TABLE.index([name, value])
+        elif [name, value] in self.table:
+            return True, self.getIdx([name, value])
+        elif name in NAME_TABLE:
+            return False, NAME_TABLE.index(name)
+        elif name in self.nameTable:
+            return False, self.getIdx(name, None)
+        else:
+            return False, False
+
+    def getIdx(self, name, value):
+        if name and value:
+            return self.table.index([name, value]) + STATIC_TABLE_NUM
+        else:
+            return self.nameTable.index(name) + STATIC_TABLE_NUM
