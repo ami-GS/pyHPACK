@@ -1,7 +1,7 @@
-from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable
+from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable, Table
 HEADER_TABLE = HeaderTable()
+table = Table()
 huffmanRoot = HuffmanTree.create()
-nameTable = [header[0] for header in STATIC_TABLE]
     
 # 6.1 Integer Representation (encode)
 def packIntRepresentation(I, N):
@@ -36,25 +36,29 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
 
     for header in headers:
 
+        match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
-        if fromStaticTable and header in STATIC_TABLE:
+        if fromStaticTable and match[0]:
             # or header in HEADER_TALBE
-            tmp = hex(STATIC_TABLE.index(header) | 0x00)[2:]
+            tmp = hex(match[1] | 0x80)[2:]
             tmp = '0' + tmp if len(tmp) % 2 else tmp
             wire += tmp
-            if not fromHeaderTable:
-                wire += packContent(header[1], huffman)                
         # 7.2.1 Literal Header Field with Incremental Indexing
-        elif fromStaticTable and header[0] in nameTable[:STATIC_TABLE_NUM]:
+        elif fromStaticTable and not match[0] and match[1]:
             if fromHeaderTable:
-                wire += hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x40)[2:]
+                #TODO index should be pulled also from header table
+                wire += hex(match[1] | 0x40)[2:]
+                HEADER_TABLE.add(header)
             else:
-                tmp = hex(nameTable[:STATIC_TABLE_NUM].index(header[0]) | 0x00)[2:]
+                tmp = hex(match[1] | 0x00)[2:]
                 tmp = '0' + tmp if len(tmp) % 2 else tmp
                 wire += tmp
             wire += packContent(header[1], huffman)
         else:
-            wire += "00" + packContent(header[0], huffman) + packContent(header[1], huffman)
+            content = packContent(header[0], huffman) + packContent(header[1], huffman)
+            prefix = "40" if fromHeaderTable else "00"
+            wire += prefix + content
+            HEADER_TABLE.add(header)
 
     return wire
 
@@ -145,7 +149,7 @@ def decode(data):
         cursor += c
 
         if isIncremental:
-            HEADER_TABLE.add(name, value)
+            HEADER_TABLE.add([name, value])
         headers.append({name:value})
 
     return headers
