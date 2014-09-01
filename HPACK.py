@@ -1,5 +1,4 @@
-from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, HeaderTable, Table
-HEADER_TABLE = HeaderTable()
+from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, Table
 table = Table()
 huffmanRoot = HuffmanTree.create()
     
@@ -48,7 +47,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
             if fromHeaderTable:
                 #TODO index should be pulled also from header table
                 wire += hex(match[1] | 0x40)[2:]
-                HEADER_TABLE.add(header)
+                table.add(header)
             else:
                 tmp = hex(match[1] | 0x00)[2:]
                 tmp = '0' + tmp if len(tmp) % 2 else tmp
@@ -58,7 +57,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             prefix = "40" if fromHeaderTable else "00"
             wire += prefix + content
-            HEADER_TABLE.add(header)
+            table.add(header)
 
     return wire
 
@@ -104,8 +103,8 @@ def parseHeader(index, subBuf, isIndexed):
         header = STATIC_TABLE[index]
         name = header[0]
         value = value or header[1]
-    elif STATIC_TABLE_NUM <= index <= STATIC_TABLE_NUM + HEADER_TABLE.currentEntryNum:
-        header = HEADER_TABLE.get(index)
+    elif STATIC_TABLE_NUM <= index <= STATIC_TABLE_NUM + table.currentEntryNum:
+        header = table.get(index)
         name = header[0]
         value = value or header[1]
     else:
@@ -123,7 +122,7 @@ def decode(data):
         isIncremental = False
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
-           HEADER_TABLE.setMaxHeaderTableSize(buf[cursor] & 0x1f)
+           table.setMaxHeaderTableSize(buf[cursor] & 0x1f)
            cursor += 1
         elif buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
@@ -149,7 +148,7 @@ def decode(data):
         cursor += c
 
         if isIncremental:
-            HEADER_TABLE.add([name, value])
+            table.add([name, value])
         headers.append({name:value})
 
     return headers
