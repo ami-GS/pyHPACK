@@ -376,10 +376,7 @@ class HuffmanTree():
 class HeaderTable(object):
     def __init__(self):
         self.settingsHeaderTableSize = 4096
-        self.table = []
-        self.nameTable = []
-        self.currentTableSize = 0
-        self.currentEntryNum = 0
+        self.initHeaderTable()
 
     def setMaxHeaderTableSize(size):
         self.settingsHeaderTableSize = size
@@ -398,6 +395,12 @@ class HeaderTable(object):
         self.currentTableSize += len("".join(header))
         self.currentEntryNum += 1
 
+    def initHeaderTable(self):
+        self.table = []
+        self.nameTable = []
+        self.currentTableSize = 0
+        self.currentEntryNum = 0
+
 class Table(HeaderTable):
     def __init__(self):
         super(Table, self).__init__()
@@ -406,7 +409,7 @@ class Table(HeaderTable):
         if [name, value] in STATIC_TABLE:
             return True, STATIC_TABLE.index([name, value])
         elif [name, value] in self.table:
-            return True, self.getIdx([name, value])
+            return True, self.getIdx(name, value)
         elif name in NAME_TABLE:
             return False, NAME_TABLE.index(name)
         elif name in self.nameTable:

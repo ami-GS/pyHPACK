@@ -1,5 +1,4 @@
-from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM, Table
-table = Table()
+from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM
 huffmanRoot = HuffmanTree.create()
     
 # 6.1 Integer Representation (encode)
@@ -30,11 +29,11 @@ def packContent(content, huffman):
         wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
     return wire
 
-def encode(headers, fromStaticTable, fromHeaderTable, huffman):
+def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
     wire = ""
-
+    
     for header in headers:
-
+        
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
@@ -46,12 +45,12 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
         elif fromStaticTable and not match[0] and match[1]:
             if fromHeaderTable:
                 #TODO index should be pulled also from header table
-                wire += hex(match[1] | 0x40)[2:]
+                tmp = hex(match[1] | 0x40)[2:]
                 table.add(header)
             else:
                 tmp = hex(match[1] | 0x00)[2:]
-                tmp = '0' + tmp if len(tmp) % 2 else tmp
-                wire += tmp
+            tmp = '0' + tmp if len(tmp) % 2 else tmp
+            wire += tmp
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
@@ -82,7 +81,7 @@ def extractContent(subBuf, length, isHuffman):
     else:
         return "".join([chr(subBuf[i]) for i in range(length)])
 
-def parseHeader(index, subBuf, isIndexed):
+def parseHeader(index, table, subBuf, isIndexed):
     def parseFromByte(buf):
         isHuffman = buf[0] & 0x80
         length, cursor = parseIntRepresentation(buf, 7)
@@ -112,7 +111,7 @@ def parseHeader(index, subBuf, isIndexed):
         
     return name, value, cursor
 
-def decode(data):
+def decode(data, table):
     buf = [int(data[i:i+2], 16) for i in range(0, len(data), 2)]
     cursor = 0
     index = 0
@@ -144,7 +143,7 @@ def decode(data):
                 index, c = parseIntRepresentation(buf[cursor:], 4)
             cursor += c
 
-        name, value, c = parseHeader(index, buf[cursor:], isIndexed)
+        name, value, c = parseHeader(index, table, buf[cursor:], isIndexed)
         cursor += c
 
         if isIncremental:
