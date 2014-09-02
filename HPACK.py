@@ -30,11 +30,15 @@ def packContent(content, huffman):
         wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
     return wire
 
-def encode(headers, fromStaticTable, fromHeaderTable, huffman):
+import time
+def encode(headers, fromStaticTable, fromHeaderTable, huffman, initTable):
     wire = ""
 
+    if initTable:
+        table.initHeaderTable()
+    
     for header in headers:
-
+        
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
@@ -46,12 +50,12 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman):
         elif fromStaticTable and not match[0] and match[1]:
             if fromHeaderTable:
                 #TODO index should be pulled also from header table
-                wire += hex(match[1] | 0x40)[2:]
+                tmp = hex(match[1] | 0x40)[2:]
                 table.add(header)
             else:
                 tmp = hex(match[1] | 0x00)[2:]
-                tmp = '0' + tmp if len(tmp) % 2 else tmp
-                wire += tmp
+            tmp = '0' + tmp if len(tmp) % 2 else tmp
+            wire += tmp
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
