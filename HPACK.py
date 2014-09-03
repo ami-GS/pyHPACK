@@ -30,7 +30,6 @@ def packContent(content, huffman):
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
-    wire = ""
     
     for header in headers:
         
