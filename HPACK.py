@@ -30,9 +30,8 @@ def packContent(content, huffman):
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
-    
+    wire = ""
     for header in headers:
-        
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
