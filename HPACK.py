@@ -1,4 +1,4 @@
-from tables import HUFFMAN_TABLE, HuffmanTree, STATIC_TABLE, STATIC_TABLE_NUM
+from tables import HUFFMAN_TABLE, HuffmanTree
 huffmanRoot = HuffmanTree.create()
     
 # 6.1 Integer Representation (encode)
@@ -96,16 +96,10 @@ def parseHeader(index, table, subBuf, isIndexed):
         value, c = parseFromByte(subBuf[cursor:])
         cursor += c
 
-    if 0 < index < STATIC_TABLE_NUM:
-        header = STATIC_TABLE[index]
-        name = header[0]
-        value = value or header[1]
-    elif STATIC_TABLE_NUM <= index <= STATIC_TABLE_NUM + table.currentEntryNum:
+    if index:
         header = table.get(index)
         name = header[0]
         value = value or header[1]
-    else:
-        pass #error
         
     return name, value, cursor
 

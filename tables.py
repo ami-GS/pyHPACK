@@ -416,6 +416,14 @@ class Table(HeaderTable):
             return False, self.getIdx(name, None)
         else:
             return False, False
+    
+    def get(self, index):
+        if 0 < index < STATIC_TABLE_NUM:
+            return STATIC_TABLE[index]
+        elif STATIC_TABLE_NUM <= index <= STATIC_TABLE_NUM + self.currentEntryNum:
+            return super(Table, self).get(index)
+        else:
+            return "" #error?
 
     def getIdx(self, name, value):
         if name and value:
