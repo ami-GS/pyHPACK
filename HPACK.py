@@ -1,4 +1,5 @@
 from tables import HUFFMAN_TABLE, HuffmanTree
+
 huffmanRoot = HuffmanTree.create()
     
 # 6.1 Integer Representation (encode)
@@ -18,11 +19,27 @@ def packIntRepresentation(I, N):
 def packContent(content, huffman):
     wire = ""
     if huffman:
+        #hContent = 0
+        #actualLen = 0
+        #for c in content:
+        #    hContent <<= HUFFMAN_TABLE[ord(c)][1]
+        #    hContent |= HUFFMAN_TABLE[ord(c)][0]
+        #    actualLen += HUFFMAN_TABLE[ord(c)][1]
+        #endPad = (8 - (actualLen % 8)) % 8
+        #if endPad:
+        #    hContent <<= endPad
+        #    hContent |= int("1"*endPad, 2)
+        #frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) / 4)
+        #intRep = packIntRepresentation(len(bin(hContent)[2:].rsplit("L")[0])/8, 7)
+        #intRep[0] = intRep[0] | 0x80
+        #wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + frontPad + hex(hContent)[2:].rsplit("L")[0] 
+        
         hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
         hContent += "1" * ((8 - (len(hContent) % 8)) % 8)
+        pad = "0" if "0000" == hContent[:4] else ""
         intRep = packIntRepresentation(len(hContent)/8, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + hex(int(hContent, 2))[2:].rsplit("L")[0]
+        wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + pad + hex(int(hContent, 2))[2:].rsplit("L")[0]
     else:
         intRep = packIntRepresentation(len(content), 7)
         wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
@@ -52,7 +69,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
-            prefix = "40" if fromHeaderTable else "00"
+            prefix = "00"#"40" if fromHeaderTable else "00"
             wire += prefix + content
             table.add(header)
 
