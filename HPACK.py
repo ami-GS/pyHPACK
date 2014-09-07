@@ -19,31 +19,32 @@ def packIntRepresentation(I, N):
 def packContent(content, huffman):
     wire = ""
     if huffman:
-        #hContent = 0
-        #actualLen = 0
-        #for c in content:
-        #    hContent <<= HUFFMAN_TABLE[ord(c)][1]
-        #    hContent |= HUFFMAN_TABLE[ord(c)][0]
-        #    actualLen += HUFFMAN_TABLE[ord(c)][1]
-        #endPad = (8 - (actualLen % 8)) % 8
-        #if endPad:
-        #    hContent <<= endPad
-        #    hContent |= int("1"*endPad, 2)
-        #frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) / 4)
-        #intRep = packIntRepresentation(len(bin(hContent)[2:].rsplit("L")[0])/8, 7)
-        #intRep[0] = intRep[0] | 0x80
-        #wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + frontPad + hex(hContent)[2:].rsplit("L")[0] 
-        
-        hContent = "".join([bin(HUFFMAN_TABLE[ord(c)][0])[2:].zfill(HUFFMAN_TABLE[ord(c)][1]) for c in content])
-        hContent += "1" * ((8 - (len(hContent) % 8)) % 8)
-        pad = "0" if "0000" == hContent[:4] else ""
-        intRep = packIntRepresentation(len(hContent)/8, 7)
+        if not content:
+            # when value is ''
+            return '80'
+
+        hContent = 0
+        actualLen = 0
+        for c in content:
+            ascNum = ord(c)
+            hContent <<= HUFFMAN_TABLE[ascNum][1]
+            hContent |= HUFFMAN_TABLE[ascNum][0]
+            actualLen += HUFFMAN_TABLE[ascNum][1]
+
+        endPad = (8 - (actualLen % 8)) % 8
+        if endPad:
+            hContent <<= endPad
+            hContent |= int("1" * endPad, 2)
+            actualLen += endPad
+        frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) // 4)
+        intRep = packIntRepresentation(actualLen // 8, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(c)[2:].zfill(2) for c in intRep]) + pad + hex(int(hContent, 2))[2:].rsplit("L")[0]
+        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) + frontPad + hex(hContent)[2:].rsplit("L")[0] 
+        
     else:
         intRep = packIntRepresentation(len(content), 7)
         wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
-        wire += "".join([hex(ord(char))[2:].zfill(2) for char in content])
+        wire += "".join([hex(ord(c))[2:].zfill(2) for c in content])
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
@@ -69,7 +70,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
-            prefix = "00"#"40" if fromHeaderTable else "00"
+            prefix = "40" if fromHeaderTable else "00"
             wire += prefix + content
             table.add(header)
 
@@ -166,5 +167,5 @@ if __name__ == "__main__":
     data = "00073a6d6574686f640347455400073a736368656d650468747470000a3a617574686f726974790f7777772e7961686f6f2e636f2e6a7000053a70617468012f"
     #print(decode(data))
     for i in packIntRepresentation(3000000, 5):
-        print hex(i)
+        print(hex(i))
     #print parseIntRepresentation("".join([str(hex(b))[2:] for b in buf]), 5)
