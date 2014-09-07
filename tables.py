@@ -370,7 +370,7 @@ class HuffmanTree():
                 cursor = cursor.right
             else:
                 cursor = cursor.left
-        print cursor.code
+        print(cursor.code)
 
 
 class HeaderTable(object):
