@@ -362,6 +362,24 @@ class HuffmanTree():
                     cursor = self
         return result
         
+    @staticmethod
+    def encode(content):
+        hContent = 0
+        actualLen = 0
+        for c in content:
+            ascNum = ord(c)
+            hContent <<= HUFFMAN_TABLE[ascNum][1]
+            hContent |= HUFFMAN_TABLE[ascNum][0]
+            actualLen += HUFFMAN_TABLE[ascNum][1]
+
+        endPad = (8 - (actualLen % 8)) % 8
+        if endPad:
+            hContent <<= endPad
+            hContent |= int("1" * endPad, 2)
+            actualLen += endPad
+        frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) // 4)
+        return frontPad + hex(hContent)[2:].rsplit("L")[0], actualLen // 8
+
     def checkTreeContent(self, data, length):
         #for debug
         cursor = self

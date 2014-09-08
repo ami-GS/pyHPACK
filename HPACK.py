@@ -1,4 +1,4 @@
-from tables import HUFFMAN_TABLE, HuffmanTree
+from tables import HuffmanTree
 
 huffmanRoot = HuffmanTree.create()
     
@@ -22,25 +22,10 @@ def packContent(content, huffman):
         if not content:
             # when value is ''
             return '80'
-
-        hContent = 0
-        actualLen = 0
-        for c in content:
-            ascNum = ord(c)
-            hContent <<= HUFFMAN_TABLE[ascNum][1]
-            hContent |= HUFFMAN_TABLE[ascNum][0]
-            actualLen += HUFFMAN_TABLE[ascNum][1]
-
-        endPad = (8 - (actualLen % 8)) % 8
-        if endPad:
-            hContent <<= endPad
-            hContent |= int("1" * endPad, 2)
-            actualLen += endPad
-        frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) // 4)
-        intRep = packIntRepresentation(actualLen // 8, 7)
+        enc, actualLen = HuffmanTree.encode(content)
+        intRep = packIntRepresentation(actualLen, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) + frontPad + hex(hContent)[2:].rsplit("L")[0] 
-        
+        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) + enc
     else:
         intRep = packIntRepresentation(len(content), 7)
         wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
@@ -54,25 +39,32 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
             # or header in HEADER_TALBE
-            tmp = hex(match[1] | 0x80)[2:]
+            tmp = hex(match[1] | 0x00)[2:] if not fromHeaderTable else hex(match[1] | 0x80)[2:]
             tmp = '0' + tmp if len(tmp) % 2 else tmp
             wire += tmp
+            if not fromHeaderTable:
+                wire += packContent(header[1], huffman)
+
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and not match[0] and match[1]:
+            pad = ""
             if fromHeaderTable:
                 #TODO index should be pulled also from header table
-                tmp = hex(match[1] | 0x40)[2:]
+                intRep = packIntRepresentation(match[1], 6)
+                #tmp = hex(intRep[0] | 0x40)[2:]
                 table.add(header)
             else:
-                tmp = hex(match[1] | 0x00)[2:]
-            tmp = '0' + tmp if len(tmp) % 2 else tmp
-            wire += tmp
+                intRep = packIntRepresentation(match[1], 4)
+                #tmp = hex(intRep[0] | 0x00)[2:]
+                #pad = '0' + tmp if len(tmp) % 2 else tmp
+            wire += "".join([hex(b)[2:].zfill(2) for b in intRep])
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             prefix = "40" if fromHeaderTable else "00"
             wire += prefix + content
-            table.add(header)
+            if fromHeaderTable:
+                table.add(header)
 
     return wire
 
