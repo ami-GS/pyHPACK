@@ -15,7 +15,9 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
-#TODO here should use shift operator
+def toHex(num):
+    return hex(num)[2:].zfill(2)
+
 def packContent(content, huffman):
     wire = ""
     if huffman:
@@ -25,11 +27,11 @@ def packContent(content, huffman):
         enc, actualLen = HuffmanTree.encode(content)
         intRep = packIntRepresentation(actualLen, 7)
         intRep[0] = intRep[0] | 0x80
-        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) + enc
+        wire += "".join([toHex(b) for b in intRep]) + enc
     else:
         intRep = packIntRepresentation(len(content), 7)
-        wire += "".join([hex(b)[2:].zfill(2) for b in intRep]) 
-        wire += "".join([hex(ord(c))[2:].zfill(2) for c in content])
+        wire += "".join([toHex(b) for b in intRep])
+        wire += "".join([toHex(ord(c)) for c in content])
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
@@ -40,7 +42,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
         if fromStaticTable and match[0]:
             intRep = packIntRepresentation(match[1], 4)
             intRep[0] = intRep[0] | 0x00 if not fromHeaderTable else intRep[0] | 0x80
-            wire += "".join([hex(b)[2:].zfill(2) for b in intRep])
+            wire += "".join([toHex(b) for b in intRep])
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
 
@@ -53,7 +55,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
             else:
                 intRep = packIntRepresentation(match[1], 4)
                 intRep[0] |= 0x00
-            wire += "".join([hex(b)[2:].zfill(2) for b in intRep])
+            wire += "".join([toHex(b) for b in intRep])
             wire += packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
