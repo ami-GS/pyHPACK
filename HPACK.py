@@ -38,25 +38,21 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
-            # or header in HEADER_TALBE
-            tmp = hex(match[1] | 0x00)[2:] if not fromHeaderTable else hex(match[1] | 0x80)[2:]
-            tmp = '0' + tmp if len(tmp) % 2 else tmp
-            wire += tmp
+            intRep = packIntRepresentation(match[1], 4)
+            intRep[0] = intRep[0] | 0x00 if not fromHeaderTable else intRep[0] | 0x80
+            wire += "".join([hex(b)[2:].zfill(2) for b in intRep])
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
 
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and not match[0] and match[1]:
-            pad = ""
             if fromHeaderTable:
-                #TODO index should be pulled also from header table
                 intRep = packIntRepresentation(match[1], 6)
-                #tmp = hex(intRep[0] | 0x40)[2:]
+                intRep[0] |= 0x40
                 table.add(header)
             else:
                 intRep = packIntRepresentation(match[1], 4)
-                #tmp = hex(intRep[0] | 0x00)[2:]
-                #pad = '0' + tmp if len(tmp) % 2 else tmp
+                intRep[0] |= 0x00
             wire += "".join([hex(b)[2:].zfill(2) for b in intRep])
             wire += packContent(header[1], huffman)
         else:
@@ -157,7 +153,6 @@ def decode(data, table):
 if __name__ == "__main__":
     data = "1FA18DB701" #3000000
     data = "00073a6d6574686f640347455400073a736368656d650468747470000a3a617574686f726974790f7777772e7961686f6f2e636f2e6a7000053a70617468012f"
-    #print(decode(data))
     for i in packIntRepresentation(3000000, 5):
         print(hex(i))
     #print parseIntRepresentation("".join([str(hex(b))[2:] for b in buf]), 5)
