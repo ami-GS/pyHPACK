@@ -30,8 +30,8 @@ def packContent(content, huffman):
         wire += "".join([toHex(b) for b in intRep]) + enc
     else:
         intRep = packIntRepresentation(len(content), 7)
-        wire += "".join([toHex(b) for b in intRep])
-        wire += "".join([toHex(ord(c)) for c in content])
+        intPrefix = "".join([toHex(b) for b in intRep])
+        wire += intPrefix + "".join([toHex(ord(c)) for c in content])
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
@@ -40,8 +40,8 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
-            intRep = packIntRepresentation(match[1], 4)
-            intRep[0] = intRep[0] | 0x00 if not fromHeaderTable else intRep[0] | 0x80
+            intRep = packIntRepresentation(match[1], 7)
+            intRep[0] |= 0x00 if not fromHeaderTable else 0x80
             wire += "".join([toHex(b) for b in intRep])
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
@@ -114,7 +114,6 @@ def parseHeader(index, table, subBuf, isIndexed):
 def decode(data, table):
     buf = [int(data[i:i+2], 16) for i in range(0, len(data), 2)]
     cursor = 0
-    index = 0
     headers = []
     while cursor < len(buf):
         isIndexed = False
