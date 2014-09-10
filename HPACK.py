@@ -26,7 +26,7 @@ def packContent(content, huffman):
             return '80'
         enc, actualLen = HuffmanTree.encode(content)
         intRep = packIntRepresentation(actualLen, 7)
-        intRep[0] = intRep[0] | 0x80
+        intRep[0] |= 0x80
         wire += "".join([toHex(b) for b in intRep]) + enc
     else:
         intRep = packIntRepresentation(len(content), 7)
@@ -40,8 +40,9 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
-            intRep = packIntRepresentation(match[1], 7)
-            intRep[0] |= 0x00 if not fromHeaderTable else 0x80
+            indexLen = 7 if fromHeaderTable else 4
+            intRep = packIntRepresentation(match[1], indexLen)
+            intRep[0] |= 0x80 if fromHeaderTable else 0x00
             wire += "".join([toHex(b) for b in intRep])
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
@@ -55,8 +56,8 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
             else:
                 intRep = packIntRepresentation(match[1], 4)
                 intRep[0] |= 0x00
-            wire += "".join([toHex(b) for b in intRep])
-            wire += packContent(header[1], huffman)
+            intPrefix = "".join([toHex(b) for b in intRep])
+            wire += intPrefix + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             prefix = "40" if fromHeaderTable else "00"
