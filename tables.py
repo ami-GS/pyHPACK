@@ -426,10 +426,10 @@ class Table(HeaderTable):
     def find(self, name, value):
         if [name, value] in STATIC_TABLE:
             return True, STATIC_TABLE.index([name, value])
-        elif name in NAME_TABLE:
-            return False, NAME_TABLE.index(name)
         elif [name, value] in self.table:
             return True, self.getIdx(name, value)
+        elif name in NAME_TABLE:
+            return False, NAME_TABLE.index(name)
         elif name in self.nameTable:
             return False, self.getIdx(name, None)
         else:
