@@ -34,8 +34,13 @@ def packContent(content, huffman):
         wire += intPrefix + "".join([toHex(ord(c)) for c in content])
     return wire
 
-def encode(headers, fromStaticTable, fromHeaderTable, huffman, table):
+def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTableSize):
     wire = ""
+    if headerTableSize != -1:
+        intRep = packIntRepresentation(headerTableSize, 5)
+        intRep[0] |= 0x20
+        wire += "".join([toHex(b) for b in intRep])
+
     for header in headers:
         match = table.find(header[0], header[1])
         # 7.1 Indexed Header Field Representation
