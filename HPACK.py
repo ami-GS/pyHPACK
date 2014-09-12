@@ -20,10 +20,7 @@ def makeWire(content, isString):
     for c in content:
         wire <<= 8
         wire |= ord(c) if isString else c
-    return hex(wire)[2:].zfill(len(content) * 2).rstrip("L")
-
-def toHex(num):
-    return hex(num)[2:].zfill(2)
+    return hex(wire)[2:].rstrip("L").zfill(len(content) * 2)
 
 def packContent(content, huffman):
     wire = ""
@@ -36,9 +33,10 @@ def packContent(content, huffman):
         intRep[0] |= 0x80
         wire += makeWire(intRep, False) + enc
     else:
+        if not content:
+            return "00"
         intRep = packIntRepresentation(len(content), 7)
-        intPrefix = makeWire(intRep, False)
-        wire += intPrefix + "".join([toHex(ord(c)) for c in content])
+        wire += makeWire(intRep, False) + makeWire(content, True)
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTableSize):
@@ -68,8 +66,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
             else:
                 intRep = packIntRepresentation(match[1], 4)
                 intRep[0] |= 0x00
-            intPrefix = makeWire(intRep, False)
-            wire += intPrefix + packContent(header[1], huffman)
+            wire += makeWire(intRep, False) + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             prefix = "40" if fromHeaderTable else "00"
