@@ -15,6 +15,13 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
+def makeWire(content, isString):
+    wire = 0
+    for c in content:
+        wire <<= 8
+        wire |= ord(c) if isString else c
+    return hex(wire)[2:].zfill(len(content) * 2).rstrip("L")
+
 def toHex(num):
     return hex(num)[2:].zfill(2)
 
@@ -27,10 +34,10 @@ def packContent(content, huffman):
         enc, actualLen = HuffmanTree.encode(content)
         intRep = packIntRepresentation(actualLen, 7)
         intRep[0] |= 0x80
-        wire += "".join([toHex(b) for b in intRep]) + enc
+        wire += makeWire(intRep, False) + enc
     else:
         intRep = packIntRepresentation(len(content), 7)
-        intPrefix = "".join([toHex(b) for b in intRep])
+        intPrefix = makeWire(intRep, False)
         wire += intPrefix + "".join([toHex(ord(c)) for c in content])
     return wire
 
@@ -39,7 +46,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
     if headerTableSize != -1:
         intRep = packIntRepresentation(headerTableSize, 5)
         intRep[0] |= 0x20
-        wire += "".join([toHex(b) for b in intRep])
+        wire += makeWire(intRep, False)
 
     for header in headers:
         match = table.find(header[0], header[1])
@@ -48,7 +55,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
             indexLen = 7 if fromHeaderTable else 4
             intRep = packIntRepresentation(match[1], indexLen)
             intRep[0] |= 0x80 if fromHeaderTable else 0x00
-            wire += "".join([toHex(b) for b in intRep])
+            wire += makeWire(intRep, False)
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
 
@@ -61,7 +68,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
             else:
                 intRep = packIntRepresentation(match[1], 4)
                 intRep[0] |= 0x00
-            intPrefix = "".join([toHex(b) for b in intRep])
+            intPrefix = makeWire(intRep, False)
             wire += intPrefix + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
