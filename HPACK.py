@@ -15,7 +15,7 @@ def packIntRepresentation(I, N):
         buf.append(I)
         return buf
 
-def makeWire(content, isString):
+def serialize(content, isString):
     wire = 0
     for c in content:
         wire <<= 8
@@ -31,12 +31,12 @@ def packContent(content, huffman):
         enc, actualLen = HuffmanTree.encode(content)
         intRep = packIntRepresentation(actualLen, 7)
         intRep[0] |= 0x80
-        wire += makeWire(intRep, False) + enc
+        wire += serialize(intRep, False) + enc
     else:
         if not content:
             return "00"
         intRep = packIntRepresentation(len(content), 7)
-        wire += makeWire(intRep, False) + makeWire(content, True)
+        wire += serialize(intRep, False) + serialize(content, True)
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTableSize):
@@ -44,7 +44,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
     if headerTableSize != -1:
         intRep = packIntRepresentation(headerTableSize, 5)
         intRep[0] |= 0x20
-        wire += makeWire(intRep, False)
+        wire += serialize(intRep, False)
 
     for header in headers:
         match = table.find(header[0], header[1])
@@ -53,7 +53,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
             indexLen = 7 if fromHeaderTable else 4
             intRep = packIntRepresentation(match[1], indexLen)
             intRep[0] |= 0x80 if fromHeaderTable else 0x00
-            wire += makeWire(intRep, False)
+            wire += serialize(intRep, False)
             if not fromHeaderTable:
                 wire += packContent(header[1], huffman)
 
@@ -66,7 +66,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
             else:
                 intRep = packIntRepresentation(match[1], 4)
                 intRep[0] |= 0x00
-            wire += makeWire(intRep, False) + packContent(header[1], huffman)
+            wire += serialize(intRep, False) + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             prefix = "40" if fromHeaderTable else "00"
