@@ -22,7 +22,7 @@ def encodeTest():
                 data = json.loads(f.read())
                 for seqno in range(len(data["cases"])):
                     headers = [[h.keys()[0], h.values()[0]]for h in data["cases"][seqno]["headers"]]
-                    code = encode(headers, 'static' in case or 'linear' in case, 'linear' in case, 'huffman' in case, table, -1) #init header table or not
+                    code = encode(headers, 'static' in case or 'linear' in case, 'linear' in case, 'huffman' in case, table) #init header table or not
                     if code != data["cases"][seqno]["wire"]:
                         allPass = False
                         print('encoder: %s' % code)
@@ -61,7 +61,7 @@ def encode2decode():
                 data = json.loads(f.read())
                 for seqno in range(len(data["cases"])):
                     headers = [[h.keys()[0], h.values()[0]] for h in data["cases"][seqno]["headers"]]
-                    wire = encode(headers, 'static' in story or 'linear' in story, 'linear' in story, 'huffman' in story, encoderTable, -1) #init header table or not
+                    wire = encode(headers, 'static' in story or 'linear' in story, 'linear' in story, 'huffman' in story, encoderTable) #init header table or not
                     try:
                         decodedHeaders = decode(wire, decoderTable)
                         if decodedHeaders != data["cases"][seqno]["headers"]:
