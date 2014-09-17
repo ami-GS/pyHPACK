@@ -24,17 +24,15 @@ def serialize(content, isString = False):
 
 def packContent(content, huffman):
     wire = ""
+    if not content:
+        # when value is ''
+        return '80' if huffman else '00'
     if huffman:
-        if not content:
-            # when value is ''
-            return '80'
         enc, actualLen = HuffmanTree.encode(content)
         intRep = packIntRepresentation(actualLen, 7)
         intRep[0] |= 0x80
         wire += serialize(intRep) + enc
     else:
-        if not content:
-            return "00"
         intRep = packIntRepresentation(len(content), 7)
         wire += serialize(intRep) + serialize(content, True)
     return wire
