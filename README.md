@@ -6,4 +6,4 @@ Python implementation of HPACK based on [draft 09](http://tools.ietf.org/html/dr
 Passes all test case (hpack-test-case)
 
 ### Encode
-Only naive case was implemented
+Passes all test case
