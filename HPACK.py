@@ -129,13 +129,12 @@ def decode(data, table):
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
            table.setMaxHeaderTableSize(buf[cursor] & 0x1f)
-           cursor += 1
+           c = 1
         elif buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
                 print("error")
             index, c = parseIntRepresentation(buf[cursor:], 7)
-            cursor += c
             isIndexed = True
         else :
             if buf[cursor] & 0xc0 == 0x40:
@@ -148,7 +147,7 @@ def decode(data, table):
             else:
                 # 7.2.2 Literal Header Field without Indexing
                 index, c = parseIntRepresentation(buf[cursor:], 4)
-            cursor += c
+        cursor += c
 
         name, value, c = parseHeader(index, table, buf[cursor:], isIndexed)
         cursor += c
