@@ -1,6 +1,6 @@
 STATIC_TABLE = [
     ["",""],
-    [":authority" ""],
+    [":authority", ""],
     [":method", "GET"],
     [":method", "POST"],
     [":path", "/"],
