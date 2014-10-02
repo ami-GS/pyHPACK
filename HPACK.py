@@ -128,8 +128,8 @@ def decode(data, table):
         isIncremental = False
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
-           table.setMaxHeaderTableSize(buf[cursor] & 0x1f)
-           c = 1
+            size, c = parseIntRepresentation(buf[cursor:, 5])
+            table.setMaxHeaderTableSize(size)
         elif buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
