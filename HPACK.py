@@ -130,7 +130,9 @@ def decode(data, table):
             # 7.3 Header Table Size Update
             size, c = parseIntRepresentation(buf[cursor:, 5])
             table.setMaxHeaderTableSize(size)
-        elif buf[cursor] & 0x80:
+            cursor += c
+        
+        if buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
                 print("error")
