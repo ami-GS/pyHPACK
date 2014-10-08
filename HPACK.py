@@ -46,27 +46,27 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
 
     for header in headers:
         match = table.find(header[0], header[1])
+        indexLen = 4
+        mask = 0x00
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
-            intRep = packIntRepresentation(match[1], indexLen)
             suffix = ""
             if fromHeaderTable:
                 indexLen = 7
-                intRep[0] |= 0x80
+                mask = 0x80
             else:
-                indexLen = 4
-                intRep[0] |= 0x00
                 suffix = packContent(header[1], huffman)
+            intRep = packIntRepresentation(match[1], indexLen)
+            intRep[0] |= mask
             wire += serialize(intRep) + suffix
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and not match[0] and match[1]:
             if fromHeaderTable:
-                intRep = packIntRepresentation(match[1], 6)
-                intRep[0] |= 0x40
+                indexLen = 6
+                mask = 0x40
                 table.add(header)
-            else:
-                intRep = packIntRepresentation(match[1], 4)
-                intRep[0] |= 0x00
+            intRep = packIntRepresentation(match[1], indexLen)
+            intRep[0] |= mask
             wire += serialize(intRep) + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
