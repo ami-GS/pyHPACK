@@ -94,17 +94,13 @@ def parseIntRepresentation(buf, N):
         I += (buf[cursor] & 0x7f) * (1 << M)
         return I, cursor + 1
 
-def extractContent(subBuf, length, isHuffman):
-    if isHuffman:
-        return huffmanRoot.decode(subBuf, length) 
-    else:
-        return "".join([chr(subBuf[i]) for i in range(length)])
-
 def parseHeader(index, table, subBuf, isIndexed):
     def parseFromByte(buf):
-        isHuffman = buf[0] & 0x80
         length, cursor = parseIntRepresentation(buf, 7)
-        content = extractContent(buf[cursor:], length, isHuffman)
+        if buf[0] & 0x80:
+            content = huffmanRoot.decode(buf[cursor:], length)
+        else:
+            content = "".join([chr(buf[cursor+i]) for i in range(length)])
         cursor += length
         return content, cursor
 
