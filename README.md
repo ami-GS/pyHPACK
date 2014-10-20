@@ -7,3 +7,6 @@ Passes all test case (hpack-test-case)
 
 ### Encode
 Passes all test case
+
+#### License
+The MIT License (MIT) Copyright (c) 2014 ami-GS
