@@ -396,7 +396,7 @@ class HeaderTable(object):
         self.settingsHeaderTableSize = 4096
         self.initHeaderTable()
 
-    def setMaxHeaderTableSize(size):
+    def setMaxHeaderTableSize(self, size):
         self.settingsHeaderTableSize = size
 
     def get(self, index):

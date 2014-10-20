@@ -129,7 +129,7 @@ def decode(data, table):
         isIncremental = False
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
-            size, c = parseIntRepresentation(buf[cursor:, 5])
+            size, c = parseIntRepresentation(buf[cursor:], 5)
             table.setMaxHeaderTableSize(size)
             cursor += c
         
