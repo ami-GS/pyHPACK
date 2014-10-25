@@ -130,7 +130,7 @@ def decode(data, table):
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
             size, c = parseIntRepresentation(buf[cursor:], 5)
-            table.setMaxHeaderTableSize(size)
+            table.setHeaderTableSize(size)
             cursor += c
         
         if buf[cursor] & 0x80:

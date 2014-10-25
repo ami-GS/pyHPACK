@@ -29,7 +29,7 @@ def encodeTest():
                 data = json.loads(f.read())
                 for seqno in range(len(data["cases"])):
                     if data["cases"][seqno].has_key("header_table_size"):
-                        table.setMaxHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
+                        table.setHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
 
                     headers = [[h.keys()[0], h.values()[0]]for h in data["cases"][seqno]["headers"]]
                     code = encode(headers, 'static' in case or 'linear' in case, 'linear' in case, 'huffman' in case, table) #init header table or not
@@ -52,8 +52,6 @@ def decodeTest():
             with open(case) as f:
                 data = json.loads(f.read())
                 for seqno in range(len(data['cases'])):
-                    if data["cases"][seqno].has_key("header_table_size"):
-                        table.setMaxHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
                     headers = decode(data['cases'][seqno]['wire'], table)
                     if headers != data['cases'][seqno]['headers']:
                         allPass = False
@@ -73,13 +71,11 @@ def encode2decode():
                 data = json.loads(f.read())
                 for seqno in range(len(data["cases"])):
                     if data["cases"][seqno].has_key("header_table_size"):
-                        encoderTable.setMaxHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
+                        encoderTable.setHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
 
                     headers = [[h.keys()[0], h.values()[0]] for h in data["cases"][seqno]["headers"]]
                     wire = encode(headers, 'static' in story or 'linear' in story, 'linear' in story, 'huffman' in story, encoderTable) #init header table or not
                     try:
-                        if data["cases"][seqno].has_key("header_table_size"):
-                            decoderTable.setMaxHeaderTableSize(int(data["cases"][seqno]["header_table_size"]))
                         decodedHeaders = decode(wire, decoderTable)
                         if decodedHeaders != data["cases"][seqno]["headers"]:
                             allPass = False
