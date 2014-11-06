@@ -1,19 +1,7 @@
 from tables import HuffmanTree
+import int_representation as intRepresent
 
 huffmanRoot = HuffmanTree.create()
-    
-# 6.1 Integer Representation (encode)
-def packIntRepresentation(I, N):
-    if I < (1 << N) - 1:
-        return [I]
-    else:
-        buf = [(1 << N) - 1]
-        I -= (1 << N) - 1
-        while I >= 0x80:
-            buf.append(I & 0x7f | 0x80)
-            I = (I >> 7)
-        buf.append(I)
-        return buf
 
 def serialize(content, isString = False):
     wire = 0
@@ -29,18 +17,18 @@ def packContent(content, huffman):
         return '80' if huffman else '00'
     if huffman:
         enc, actualLen = HuffmanTree.encode(content)
-        intRep = packIntRepresentation(actualLen, 7)
+        intRep = intRepresent.pack(actualLen, 7)
         intRep[0] |= 0x80
         wire += serialize(intRep) + enc
     else:
-        intRep = packIntRepresentation(len(content), 7)
+        intRep = intRepresent.pack(len(content), 7)
         wire += serialize(intRep) + serialize(content, True)
     return wire
 
 def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTableSize = -1):
     wire = ""
     if headerTableSize != -1:
-        intRep = packIntRepresentation(headerTableSize, 5)
+        intRep = intRepresent.pack(headerTableSize, 5)
         intRep[0] |= 0x20
         wire += serialize(intRep)
 
@@ -56,7 +44,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
                 mask = 0x80
             else:
                 suffix = packContent(header[1], huffman)
-            intRep = packIntRepresentation(match[1], indexLen)
+            intRep = intRepresent.pack(match[1], indexLen)
             intRep[0] |= mask
             wire += serialize(intRep) + suffix
         # 7.2.1 Literal Header Field with Incremental Indexing
@@ -65,7 +53,7 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
                 indexLen = 6
                 mask = 0x40
                 table.add(header)
-            intRep = packIntRepresentation(match[1], indexLen)
+            intRep = intRepresent.pack(match[1], indexLen)
             intRep[0] |= mask
             wire += serialize(intRep) + packContent(header[1], huffman)
         else:
@@ -79,24 +67,9 @@ def encode(headers, fromStaticTable, fromHeaderTable, huffman, table, headerTabl
 
     return wire
 
-# 6.1 Integer Representation (decode)
-def parseIntRepresentation(buf, N):
-    I = (buf[0] & ((1 << N) - 1))
-    cursor = 1
-    if I < (1 << N) - 1: 
-        return I, cursor
-    else:
-        M = 0
-        while buf[cursor] & 0x80:
-            I += (buf[cursor] & 0x7f) * (1 << M)
-            M += 7
-            cursor += 1
-        I += (buf[cursor] & 0x7f) * (1 << M)
-        return I, cursor + 1
-
 def parseHeader(index, table, subBuf, isIndexed):
     def parseFromByte(buf):
-        length, cursor = parseIntRepresentation(buf, 7)
+        length, cursor = intRepresent.parse(buf, 7)
         if buf[0] & 0x80:
             content = huffmanRoot.decode(buf[cursor:], length)
         else:
@@ -129,7 +102,7 @@ def decode(data, table):
         isIncremental = False
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
-            size, c = parseIntRepresentation(buf[cursor:], 5)
+            size, c = intRepresent.parse(buf[cursor:], 5)
             table.setHeaderTableSize(size)
             cursor += c
         
@@ -137,19 +110,19 @@ def decode(data, table):
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
                 print("error")
-            index, c = parseIntRepresentation(buf[cursor:], 7)
+            index, c = intRepresent.parse(buf[cursor:], 7)
             isIndexed = True
         else :
             if buf[cursor] & 0xc0 == 0x40:
                 # 7.2.1 Literal Header Field with Incremental Indexing
-                index, c = parseIntRepresentation(buf[cursor:], 6)
+                index, c = intRepresent.parse(buf[cursor:], 6)
                 isIncremental = True
             elif buf[cursor] & 0xf0 == 0xf0:
                 # 7.2.3 Literal Header Field never Indexed
-                index, c = parseIntRepresentation(buf[cursor:], 4)
+                index, c = intRepresent.parse(buf[cursor:], 4)
             else:
                 # 7.2.2 Literal Header Field without Indexing
-                index, c = parseIntRepresentation(buf[cursor:], 4)
+                index, c = intRepresent.parse(buf[cursor:], 4)
         cursor += c
 
         name, value, c = parseHeader(index, table, buf[cursor:], isIndexed)
@@ -164,6 +137,6 @@ def decode(data, table):
 if __name__ == "__main__":
     data = "1FA18DB701" #3000000
     data = "00073a6d6574686f640347455400073a736368656d650468747470000a3a617574686f726974790f7777772e7961686f6f2e636f2e6a7000053a70617468012f"
-    for i in packIntRepresentation(3000000, 5):
+    for i in intRepresent.pack(3000000, 5):
         print(hex(i))
-    #print parseIntRepresentation("".join([str(hex(b))[2:] for b in buf]), 5)
+    #print intRepresent.parse("".join([str(hex(b))[2:] for b in buf]), 5)
