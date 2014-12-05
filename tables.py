@@ -391,19 +391,19 @@ class HuffmanTree():
         print(cursor.code)
 
 
-class HeaderTable(object):
+class DynamicTable(object):
     def __init__(self):
-        self.settingsHeaderTableSize = 4096
-        self.initHeaderTable()
+        self.settingsDynamicTableSize = 4096
+        self.initDynamicTable()
 
     def setHeaderTableSize(self, size):
-        self.settingsHeaderTableSize = size
+        self.settingsDynamicTableSize = size
 
     def get(self, index):
         return self.table[index - STATIC_TABLE_NUM]
 
     def add(self, header):
-        while self.currentTableSize + len("".join(header)) > self.settingsHeaderTableSize:
+        while self.currentTableSize + len("".join(header)) > self.settingsDynamicTableSize:
             trash = self.table.pop()
             self.nameTable.pop()
             self.currentTableSize -= len("".join(trash))
@@ -413,13 +413,13 @@ class HeaderTable(object):
         self.currentTableSize += len("".join(header))
         self.currentEntryNum += 1
 
-    def initHeaderTable(self):
+    def initDynamicTable(self):
         self.table = []
         self.nameTable = []
         self.currentTableSize = 0
         self.currentEntryNum = 0
 
-class Table(HeaderTable):
+class Table(DynamicTable):
     def __init__(self):
         super(Table, self).__init__()
 

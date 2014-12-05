@@ -1,7 +1,7 @@
 pyHPACK
 =======
 
-Python implementation of HPACK based on [draft 09](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-09 "draft 09")
+Python implementation of HPACK based on [draft 10](http://tools.ietf.org/html/draft-ietf-httpbis-header-compression-10 "draft 10")
 ### Decode
 Passes all test case (hpack-test-case)
 
