@@ -1,5 +1,7 @@
 from tables import HuffmanTree
 import int_representation as intRepresent
+from binascii import unhexlify
+import struct
 
 huffmanRoot = HuffmanTree.create()
 
@@ -8,13 +10,13 @@ def serialize(content, isString = False):
     for c in content:
         wire <<= 8
         wire |= ord(c) if isString else c
-    return hex(wire)[2:].rstrip("L").zfill(len(content) * 2)
+    return unhexlify(hex(wire)[2:].rstrip("L").zfill(len(content) * 2))
 
 def packContent(content, huffman):
     wire = ""
     if not content:
         # when value is ''
-        return '80' if huffman else '00'
+        return '\x80' if huffman else '\x00'
     if huffman:
         enc, actualLen = HuffmanTree.encode(content)
         intRep = intRepresent.pack(actualLen, 7)
@@ -59,10 +61,10 @@ def encode(headers, fromStaticTable, fromDynamicTable, huffman, table, dynamicTa
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
             if fromDynamicTable:
-                prefix = "40"
+                prefix = "\x40"
                 table.add(header)
             else:
-                prefix = "00"
+                prefix = "\x00"
             wire += prefix + content
 
     return wire
@@ -94,7 +96,7 @@ def parseHeader(index, table, subBuf, isIndexed):
     return name, value, cursor
 
 def decode(data, table):
-    buf = [int(data[i:i+2], 16) for i in range(0, len(data), 2)]
+    buf = struct.unpack(">"+str(len(data))+"B", data)
     cursor = 0
     headers = []
     while cursor < len(buf):

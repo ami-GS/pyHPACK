@@ -1,3 +1,5 @@
+from binascii import unhexlify
+
 STATIC_TABLE = [
     ["",""],
     [":authority", ""],
@@ -378,7 +380,7 @@ class HuffmanTree():
             hContent |= int("1" * endPad, 2)
             actualLen += endPad
         frontPad = '0' * ((actualLen - len(bin(hContent)[2:].rsplit("L")[0])) // 4)
-        return frontPad + hex(hContent)[2:].rsplit("L")[0], actualLen // 8
+        return unhexlify(frontPad + hex(hContent)[2:].rsplit("L")[0]), actualLen // 8
 
     def checkTreeContent(self, data, length):
         #for debug

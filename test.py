@@ -2,7 +2,7 @@ import os, sys
 import json
 from HPACK import decode, encode
 from tables import Table
-
+from binascii import unhexlify
 
 
 TESTCASE = [
@@ -33,7 +33,7 @@ def encodeTest():
 
                     headers = [[h.keys()[0], h.values()[0]]for h in data["cases"][seqno]["headers"]]
                     code = encode(headers, 'static' in case or 'linear' in case, 'linear' in case, 'huffman' in case, table) #init header table or not
-                    if code != data["cases"][seqno]["wire"]:
+                    if code != unhexlify(data["cases"][seqno]["wire"]):
                         allPass = False
                         print('encoder: %s' % code)
                         print('answer: %s' % data["cases"][seqno]["wire"])
