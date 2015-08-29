@@ -101,36 +101,32 @@ def decode(data, table):
     headers = []
     while cursor < len(buf):
         isIndexed = False
-        isIncremental = False
         if buf[cursor] & 0xe0 == 0x20:
             # 7.3 Header Table Size Update
             size, c = intRepresent.parse(buf[cursor:], 5)
             table.setHeaderTableSize(size)
             cursor += c
-        
+
+        nLen = 0
         if buf[cursor] & 0x80:
             # 7.1 Indexd Header Field
             if not buf[cursor] & 0x7f:
                 print("error")
-            index, c = intRepresent.parse(buf[cursor:], 7)
+            nLen = 7
             isIndexed = True
         else :
             if buf[cursor] & 0xc0 == 0x40:
                 # 7.2.1 Literal Header Field with Incremental Indexing
-                index, c = intRepresent.parse(buf[cursor:], 6)
-                isIncremental = True
-            elif buf[cursor] & 0xf0 == 0xf0:
-                # 7.2.3 Literal Header Field never Indexed
-                index, c = intRepresent.parse(buf[cursor:], 4)
+                nLen = 6
             else:
+                # 7.2.3 Literal Header Field never Indexed
                 # 7.2.2 Literal Header Field without Indexing
-                index, c = intRepresent.parse(buf[cursor:], 4)
-        cursor += c
+                nLen = 4
+        index, c1 = intRepresent.parse(buf[cursor:], nLen)
+        name, value, c2 = parseHeader(index, table, buf[cursor+c1:], isIndexed)
+        cursor += c1 + c2
 
-        name, value, c = parseHeader(index, table, buf[cursor:], isIndexed)
-        cursor += c
-
-        if isIncremental:
+        if nLen == 6:
             table.add([name, value])
         headers.append({name:value})
 
