@@ -36,35 +36,31 @@ def encode(headers, fromStaticTable, fromDynamicTable, huffman, table, dynamicTa
 
     for header in headers:
         match = table.find(header[0], header[1])
-        indexLen = 4
-        mask = 0x00
         # 7.1 Indexed Header Field Representation
         if fromStaticTable and match[0]:
             suffix = ""
             if fromDynamicTable:
-                indexLen = 7
-                mask = 0x80
+                intRep = intRepresent.pack(match[1], 7)
+                intRep[0] |= 0x80
+                wire += serialize(intRep)
             else:
-                suffix = packContent(header[1], huffman)
-            intRep = intRepresent.pack(match[1], indexLen)
-            intRep[0] |= mask
-            wire += serialize(intRep) + suffix
+                intRep = intRepresent.pack(match[1], 4)
+                wire += serialize(intRep) + packContent(header[1], huffman)
         # 7.2.1 Literal Header Field with Incremental Indexing
         elif fromStaticTable and not match[0] and match[1]:
             if fromDynamicTable:
-                indexLen = 6
-                mask = 0x40
+                intRep = intRepresent.pack(match[1], 6)
+                intRep[0] |= 0x40
                 table.add(header)
-            intRep = intRepresent.pack(match[1], indexLen)
-            intRep[0] |= mask
+            else:
+                intRep = intRepresent.pack(match[1], 4)
             wire += serialize(intRep) + packContent(header[1], huffman)
         else:
             content = packContent(header[0], huffman) + packContent(header[1], huffman)
+            prefix = "\x00"
             if fromDynamicTable:
                 prefix = "\x40"
                 table.add(header)
-            else:
-                prefix = "\x00"
             wire += prefix + content
 
     return wire
