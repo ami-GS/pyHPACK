@@ -29,7 +29,7 @@ def packContent(content, huffman):
 
 def encode(headers, fromStaticTable, fromDynamicTable, huffman, table, dynamicTableSize = -1):
     wire = ""
-    if dynamicTableSize != -1:
+    if dynamicTableSize != -1 and table.settingsDynamicTableSize != dynamicTableSize:
         intRep = intRepresent.pack(dynamicTableSize, 5)
         intRep[0] |= 0x20
         wire += serialize(intRep)
